@@ -1,0 +1,4 @@
+MONGODB_URI= mongodb://localhost:27017/
+DBNAME = chess
+PORT = 3001
+HOST = 0.0.0.0

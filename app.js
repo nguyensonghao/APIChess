@@ -19,15 +19,23 @@ const getListRoom = () => {
     return listRoom;
 }
 
-const getRomById = (id) => {
+const getRoomById = (id) => {
     return listRoom.find(room => {
         return room.id == id;
     })
 }
 
+const addUserToRoom = (roomId, user) => {
+    listRoom.map(room => {
+        if (room.id == roomId) {
+            room.listUser.push(user);
+        }
+    })
+}
+
 const createRoom = () => {
     let room = {
-        id: new Date(),
+        id: new Date().getTime(),
         name: `Room ${listRoom.length}`,
         listUser: [],
         status: false,
@@ -56,6 +64,32 @@ io.on('connection', socket => {
     socket.on('createRoom', (id) => {
         createRoom();
         io.sockets.emit('getListRoom', getListRoom());
+    })
+
+    socket.on('joinRoom', (newUser) => {
+        let id = newUser.roomId;
+        let user = newUser.user;
+        let room = getRoomById(id);
+        if (room) {
+            // Join socket room
+            if (room.listUser.length < 2) {
+                // Join socket to socket room
+                socket.join(room.id);
+
+                // Join user to room
+                addUserToRoom(id, user);
+
+                // Change information room
+                io.sockets.emit('getListRoom', getListRoom());
+
+                // Put event add new user to other user in room
+                io.to(room.id).emit('createGame', room.game);
+            } else {
+                console.log("Room fulled user!");
+            }
+        } else {
+            console.log("Room not exist!");
+        }
     })
   
   	io.sockets.on('disconnect', () => {
